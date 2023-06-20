@@ -3,5 +3,5 @@ export type APIHouseListed = {
     address: string,
     homeowner: string,
     price: number
-    photo_url: string
+    photoURL: string
 }

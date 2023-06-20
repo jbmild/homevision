@@ -5,8 +5,17 @@
   "repository": "https://github.com/jbmild/homevision.git",
   "author": "Jonatan Mild",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc --init --rootDir src --outDir ./bin --esModuleInterop --lib ES2019 --module commonjs --noImplicitAny true",
+    "start": "node ./bin/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts"
+  },
   "dependencies": {
-    "axios": "^1.4.0",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.1",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.1.3"
   }
 }
