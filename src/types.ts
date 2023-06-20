@@ -5,3 +5,7 @@ export type APIHouseListed = {
     price: number
     photoURL: string
 }
+
+export type GetHouses = {
+    houses: APIHouseListed[]
+}

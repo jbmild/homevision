@@ -1,68 +1,24 @@
-import { APIHouseListed } from "./types";
-import axios, { AxiosError } from 'axios';
-import { promises as fs } from "fs";
+import { config } from 'dotenv'
+import { processPageOfHouses } from "./controllers/StoreHousesController";
+import { createDirectoryIfNotExists } from './utils/directories';
+config()
 
-const apiUrl = "http://app-homevision-staging.herokuapp.com/api_project/houses";
-const successStatus = 200;
+async function main() {
+    await createDirectoryIfNotExists(process.env.IMAGE_FOLDER);
 
-type GetHouses = {
-    houses: APIHouseListed[]
-}
+    const numberPages = 10;
+    const housesPerPage = 10;
+    //TODO make sure that folderPath exists
+    let pagePromises = [];
 
-export async function getHouses(page: number = 1, perPage: number = 10) {
-    return axios.get<GetHouses>(apiUrl, { headers: { Accept: 'application/json' } }).then(({ data, status }) => {
-        return data;
-    }).catch((reason: AxiosError) => {
-        if (reason.response?.status >= 500 && reason.response?.status <= 599) {
-            console.log("Retry");
-            return getHouses(page, perPage);
-        }
+    for (let page = 1; page <= numberPages; page++) {
+        pagePromises.push(processPageOfHouses(page, housesPerPage, process.env.IMAGE_FOLDER))
+    }
 
-        console.log("Unexpected error: ", JSON.stringify(reason));
-        throw reason;
-    }).catch((err: any) => {
-        console.log("Unexpected error: ", JSON.stringify(err));
-        throw err;
-    });
-}
-
-export async function storeFromWeb(url: string, name: string) {
-    const fileExtension = url.substring(url.lastIndexOf(".") + 1)
-    const fileName = name.replace(/[^a-zA-Z0-9\- ]/g, '')
-    const folder = "./images"
-    const filePath = folder + "/" + fileName + "." + fileExtension
-    console.log(filePath)
-
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    await fs.writeFile(filePath, buffer);
-}
-
-
-async function processPageOfHouses(page: number, perPage: number) {
-    getHouses(page, perPage).then(({ houses }) => {
-        console.log(houses)
-        let photoPromises = []
-        for (let house of houses) {
-            console.log(house)
-            photoPromises.push(storeFromWeb(house.photoURL, house.id + "-" + house.address))
-        }
-        Promise.all(photoPromises).then((value: any[]) => {
-            return {
-                error: false,
-                page
-            }
-        })
-    }).catch((error: any) => {
-        return {
-            message: error.message,
-            error: true,
-            page
-        }
+    return Promise.all(pagePromises).then(()=>{
+        console.log("House's images downloaded successfully");
+        return;
     })
-}
+} 
+main()
 
-
-processPageOfHouses(1, 10)
