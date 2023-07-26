@@ -1,5 +1,7 @@
 node_modules
 node_modules/*
-bin/*
+build
+build/*
+images
 images/*
 .env
